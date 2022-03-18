@@ -10,23 +10,37 @@ contract Marketplace {
 
     struct Offer {
         address seller;
-        uint tokenId;
-        uint price;
+        uint256 tokenId;
+        uint256 price;
         bool active;
     }
 
     struct Auction {
         address seller;
-        uint tokenId;
-        uint endTime;
+        uint256 tokenId;
+        uint256 endTime;
         bool active;
         address highestBidder;
-        uint highestBid;
-        uint bidsCount;
+        uint256 highestBid;
+        uint256 bidsCount;
     }
 
-    mapping(uint => Offer) listings;
-    mapping(uint => Auction) auctions;
+    mapping(uint256 => Offer) listings;
+    mapping(uint256 => Auction) auctions;
+
+    event OfferListed(address indexed seller, uint256 tokenId, uint256 price);
+    event OfferBought(uint256 tokenId);
+    event OfferCancelled(uint256 tokenId);
+
+    event AuctionListed(
+        address seller,
+        uint256 tokenId,
+        uint256 endTime,
+        uint256 minPrice
+    );
+    event AuctionBid(uint256 tokenId, uint256 price);
+    event AuctionFinished(uint256 tokenId);
+    event AuctionCancelled(uint256 tokenId);
 
     constructor(address paymentTokenAddress, address nftTokenAddress) {
         paymentToken = ByobToken(paymentTokenAddress);
@@ -41,18 +55,14 @@ contract Marketplace {
         nftToken.mintNFT(recipient, tokenUri);
     }
 
-    function listItem(uint tokenId, uint price) public {
+    function listItem(uint256 tokenId, uint256 price) public {
         nftToken.transferFrom(msg.sender, address(this), tokenId);
-        Offer memory offer = Offer(
-            msg.sender,
-            tokenId,
-            price,
-            true
-        );
+        Offer memory offer = Offer(msg.sender, tokenId, price, true);
         listings[tokenId] = offer;
+        emit OfferListed(msg.sender, tokenId, price);
     }
 
-    function buyItem(uint tokenId) public {
+    function buyItem(uint256 tokenId) public {
         require(listings[tokenId].active, "Offer is not active");
         require(
             listings[tokenId].seller != msg.sender,
@@ -65,15 +75,17 @@ contract Marketplace {
             listings[tokenId].price
         );
         listings[tokenId].active = false;
+        emit OfferBought(tokenId);
     }
 
-    function cancel(uint tokenId) public {
+    function cancel(uint256 tokenId) public {
         require(msg.sender == listings[tokenId].seller, "Not seller");
         listings[tokenId].active = false;
         nftToken.transferFrom(address(this), msg.sender, tokenId);
+        emit OfferCancelled(tokenId);
     }
 
-    function listItemOnAuction(uint tokenId, uint minPrice) public {
+    function listItemOnAuction(uint256 tokenId, uint256 minPrice) public {
         nftToken.transferFrom(msg.sender, address(this), tokenId);
         Auction memory auction = Auction(
             msg.sender,
@@ -85,9 +97,10 @@ contract Marketplace {
             0
         );
         auctions[tokenId] = auction;
+        emit AuctionListed(msg.sender, tokenId, block.timestamp + 3 days, minPrice);
     }
 
-    function makeBid(uint tokenId, uint price) public {
+    function makeBid(uint256 tokenId, uint256 price) public {
         require(auctions[tokenId].active, "Auction is not active");
         require(
             auctions[tokenId].endTime > block.timestamp,
@@ -107,9 +120,10 @@ contract Marketplace {
         auctions[tokenId].highestBidder = msg.sender;
         auctions[tokenId].highestBid = price;
         auctions[tokenId].bidsCount += 1;
+        emit AuctionBid(tokenId, price);
     }
 
-    function finishAuction(uint tokenId) public {
+    function finishAuction(uint256 tokenId) public {
         require(auctions[tokenId].active, "Auction is not active");
         require(
             auctions[tokenId].endTime < block.timestamp,
@@ -126,10 +140,10 @@ contract Marketplace {
             auctions[tokenId].highestBid
         );
         auctions[tokenId].active = false;
+        emit AuctionFinished(tokenId);
     }
 
-    function cancelAuction(uint tokenId) public {
-        require(msg.sender == auctions[tokenId].seller, "Not seller");
+    function cancelAuction(uint256 tokenId) public {
         require(auctions[tokenId].active, "Auction is not active");
         require(
             auctions[tokenId].endTime < block.timestamp,
@@ -143,5 +157,6 @@ contract Marketplace {
         }
         nftToken.transferFrom(address(this), msg.sender, tokenId);
         auctions[tokenId].active = false;
+        emit AuctionCancelled(tokenId);
     }
 }

@@ -266,16 +266,6 @@ describe("Marketplace contract", () => {
             expect(await baseNFT.balanceOf(marketplace.address)).to.equal(0);
             expect(await byobToken.balanceOf(marketplace.address)).to.equal(0);
         });
-        it("Should revert non-sellers trying to cancel auctions", async () => {
-            await baseNFT.connect(addr1).approve(marketplace.address, 1);
-            await marketplace.connect(addr1).listItemOnAuction(1, 100);
-
-            await expect(marketplace.connect(addr2).cancelAuction(1)).to.be.revertedWith("Not seller");
-            expect(await baseNFT.balanceOf(addr1.address)).to.equal(0);
-            expect(await byobToken.balanceOf(addr1.address)).to.equal(0);
-            expect(await baseNFT.balanceOf(marketplace.address)).to.equal(1);
-            expect(await byobToken.balanceOf(marketplace.address)).to.equal(0);
-        });
         it("Should revert trying to cancel expired auctions", async () => {
             await baseNFT.connect(addr1).approve(marketplace.address, 1);
             await marketplace.connect(addr1).listItemOnAuction(1, 100);
