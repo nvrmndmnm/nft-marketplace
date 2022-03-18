@@ -1,9 +1,14 @@
 import "@nomiclabs/hardhat-waffle";
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-etherscan";
+import "@openzeppelin/hardhat-upgrades";
 import "solidity-coverage";
+import "hardhat-gas-reporter";
 import "hardhat-contract-sizer";
 import 'dotenv/config';
+import './tasks/marketplace.ts';
+import './tasks/byob.ts';
+import './tasks/nft.ts';
 
 module.exports = {
   solidity: "0.8.1",
@@ -26,5 +31,8 @@ module.exports = {
     runOnCompile: true,
     strict: true,
     only: [':ERC20$'],
+  },
+  gasReporter: {
+    enabled: true
   }
 };
