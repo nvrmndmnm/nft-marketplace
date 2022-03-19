@@ -23,7 +23,6 @@ describe("Marketplace contract", () => {
         byobToken = await ByobToken.deploy();
         baseNFT = await BaseNFT.deploy();
         marketplace = await Marketplace.deploy(byobToken.address, baseNFT.address);
-        await byobToken.transferOwnership(marketplace.address);
         await baseNFT.transferOwnership(marketplace.address);
         [owner, addr1, addr2] = await ethers.getSigners();
         const defaultNFT = await marketplace.createItem("1", addr1.address);
@@ -115,6 +114,16 @@ describe("Marketplace contract", () => {
             expect(await baseNFT.balanceOf(addr1.address)).to.equal(0);
             expect(await byobToken.balanceOf(addr1.address)).to.equal(0);
             expect(await baseNFT.balanceOf(marketplace.address)).to.equal(1);
+            expect(await byobToken.balanceOf(marketplace.address)).to.equal(0);
+        });
+        it("Should revert trying to cancel inactive listing", async () => {
+            await baseNFT.connect(addr1).approve(marketplace.address, 1);
+            await marketplace.connect(addr1).listItem(1, 100);
+            await marketplace.connect(addr1).cancel(1);
+            await expect(marketplace.connect(addr1).cancel(1)).to.be.revertedWith("Offer is not active");
+            expect(await baseNFT.balanceOf(addr1.address)).to.equal(1);
+            expect(await byobToken.balanceOf(addr1.address)).to.equal(0);
+            expect(await baseNFT.balanceOf(marketplace.address)).to.equal(0);
             expect(await byobToken.balanceOf(marketplace.address)).to.equal(0);
         });
     });

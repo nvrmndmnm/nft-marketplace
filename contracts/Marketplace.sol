@@ -80,6 +80,7 @@ contract Marketplace {
 
     function cancel(uint256 tokenId) public {
         require(msg.sender == listings[tokenId].seller, "Not seller");
+        require(listings[tokenId].active, "Offer is not active");
         listings[tokenId].active = false;
         nftToken.transferFrom(address(this), msg.sender, tokenId);
         emit OfferCancelled(tokenId);

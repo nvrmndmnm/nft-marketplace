@@ -22,7 +22,6 @@ async function main() {
     const Marketplace = await ethers.getContractFactory("Marketplace");
     const marketplace = await Marketplace.deploy(byobToken.address, baseNFT.address);
     await marketplace.deployed();
-    await byobToken.transferOwnership(marketplace.address);
     await baseNFT.transferOwnership(marketplace.address);
     console.log("Marketplace contract address:", marketplace.address);
 }

@@ -12,7 +12,7 @@ task("approve", "Approves set amount of tokens from specified account")
         const byob = await hre.ethers.getContractAt("ByobToken", BYOB_ADDRESS);
         const signer = await hre.ethers.getSigner(args.signer);
         await (await byob.connect(signer).approve(args.spender, args.value)).wait()
-        console.log(`Approved ${args.value} tokens to transfer from ${args.spender}. Approved total: ${await byob.allowance(args.signer, args.spender)}`);
+        console.log(`Approved ${args.value} tokens to transfer from ${args.spender}.`);
     });
 task("transfer", "Transfers set amount of tokens from contract owner to specified account")
     .addParam("to", "Receiver address")
